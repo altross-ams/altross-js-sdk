@@ -1,41 +1,36 @@
-import dotenv from "dotenv"
-import path from "path"
-import UserFeatureModel from "./model/userFeature.model"
-import mongoose from "mongoose"
-
-dotenv.config({
-  path: path.resolve(__dirname + "/config/.env"),
-})
+import fetch from "node-fetch"
 
 export default class Permissions {
-  constructor(authToken) {
+  constructor(authToken, orgid) {
     this.authToken = authToken
-    let authSplitted = authToken.split("-")
-    this.dbName = authSplitted[1]
-    this.orgId = authSplitted[0]
+    this.orgid = orgid
   }
   async init() {
-    let { dbName } = this
-    let url =
-      process.env.MONGO_ACCESS_TOKEN_FIRST +
-      dbName +
-      process.env.MONGO_ACCESS_TOKEN_LAST
-
-    let conn = await mongoose.connect(url, {
-      useNewUrlParser: true,
-      useCreateIndex: true,
-      useUnifiedTopology: true,
-      useFindAndModify: false,
-    })
-    this.connection = conn
+    let filter = { filter: { status: "ACTIVE" } }
+    let response = await fetch(
+      "http://localhost:5000/api/v1/modules/list/userFeature",
+      {
+        method: "post",
+        body: JSON.stringify(filter),
+        headers: {
+          Authorization: `Bearer ${this.authToken}`,
+          orgid: this.orgid,
+        },
+      }
+    )
+    let jsonResponse = await response.json()
+    let { data } = jsonResponse
+    this.userFeatures = data
   }
   async isActive(userId, featureId) {
     try {
-      let record = await UserFeatureModel.findOne({ userId, featureId })
+      let { userFeatures } = this
+      let selectedUserFeature = userFeatures.find((record) => {
+        return userId === record.userId && featureId === record.featureId
+      })
 
-      let { status } = record || {}
-
-      return status === "ACTIVE"
+      let { status } = selectedUserFeature || {}
+      return status === "ACTIVE" ? true : false
     } catch (error) {
       return error
     }
