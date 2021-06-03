@@ -1,4 +1,4 @@
-import Permissions from "./index"
+import Permissions from "../src/index"
 
 const test = async () => {
   const perm = new Permissions(
@@ -10,9 +10,9 @@ const test = async () => {
   await perm.init()
   console.log("here")
 
-  console.log(
-    await perm.isActive("michael_scott_123", "workflow_management_123")
-  )
+  console.log(perm.isActive("michael_scott_123", "workflow_management_123"))
+  console.log(perm.isActive("P8uhx5FJ36HBebPm8aawzo", "asdu223uhc"))
+  console.log(perm.getAllActiveLicenses())
 }
 
 test()
