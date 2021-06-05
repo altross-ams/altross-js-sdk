@@ -2,12 +2,20 @@ import resolve from "@rollup/plugin-node-resolve"
 import babel from "rollup-plugin-babel"
 import { terser } from "rollup-plugin-terser"
 export default {
-  input: "index.js",
+  input: "src/index.js",
   output: [
+    {
+      file: "build/index.min.js",
+      format: "es",
+
+      plugins: [resolve(), terser(), babel()],
+    },
     {
       file: "build/index.js",
       format: "es",
+
+      plugins: [resolve(), babel()],
     },
   ],
-  plugins: [resolve(), babel(), terser()],
+  external: ["http"],
 }

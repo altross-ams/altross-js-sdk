@@ -1,34 +1,55 @@
-import axios from "axios"
+import http from "http"
 
-const ALTROSS_BASE_URL = "http://localhost:5000/api"
+const ALTROSS_BASE_URL = "localhost"
 
 export default class Permissions {
   constructor(authToken, orgid) {
     this.authToken = authToken
     this.orgid = orgid
     this.defaultRequest = {
-      baseURL: ALTROSS_BASE_URL,
-      url: "",
+      host: ALTROSS_BASE_URL,
+      port: 5000,
+      path: "/api/v1/modules/list/userFeature",
       method: "POST",
-      headers: {
-        Authorization: "Bearer " + authToken,
-        orgid: orgid,
-      },
-      maxContentLength: Infinity,
-      maxBodyLength: Infinity,
+    }
+    this.defaultHeaders = {
+      "Content-Type": "application/json",
+      Authorization: "Bearer " + this.authToken,
+      orgid: this.orgid,
     }
   }
+  createRequestData(data) {
+    let requests = { ...this.defaultRequest, ...data }
+
+    this.defaultRequest = { ...requests, headers: this.defaultHeaders }
+  }
+  createHeaders(data) {
+    let headers = { ...this.defaultHeaders, ...data }
+
+    this.defaultHeaders = headers
+  }
   async init() {
-    let param = { filter: { status: "ACTIVE" } }
-    let url = "v1/modules/list/userFeature"
-    let data = this.createRequest({ data: param, url })
-    try {
-      let response = await axios(data)
-      let { data: records, meta } = response.data
-      if (records) this.userFeatures = this.serializeRecords(records, meta)
-    } catch (error) {
-      return error
-    }
+    let param = JSON.stringify({ filter: { status: "ACTIVE" } })
+    this.createHeaders({ "Content-Length": param.length })
+    this.createRequestData({})
+
+    return new Promise((resolve, reject) => {
+      const req = http.request(this.defaultRequest, (res) => {
+        res.on("data", (d) => {
+          let responseData = JSON.parse(d)
+          let { data, meta } = responseData || {}
+          this.userFeatures = this.serializeRecords(data, meta)
+          resolve(this.userFeatures)
+        })
+      })
+
+      req.on("error", (error) => {
+        reject(error)
+      })
+
+      req.write(param)
+      req.end()
+    })
   }
   serializeRecords(listRecords, meta) {
     let finalRecord = []
@@ -44,11 +65,6 @@ export default class Permissions {
       finalRecord.push({ ...record, ...lookupFieldValues })
     })
     return finalRecord
-  }
-  createRequest(data) {
-    let options = { ...this.defaultRequest, ...data }
-
-    return options
   }
   isActive(userId, featureId) {
     try {
@@ -68,7 +84,6 @@ export default class Permissions {
       let { userFeatures } = this
       let selectedUserFeature = userFeatures.map((record) => {
         let { id, featureId, features } = record
-        console.log(features)
         return {
           id,
           featureId,

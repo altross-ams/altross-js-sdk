@@ -1,9 +1,8 @@
 import Permission from "../src/index"
-import "babel-polyfill"
 
 describe("insert", () => {
   const perm = new Permission(
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFrc2hheWthbm5hbjk2N0BnbWFpbC5jb20iLCJpYXQiOjE2MjI0ODEyNDV9.MqdGeRgmV3JQRxhrmODLvS2PzZwJ1AibKq5ePKalc6c",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFrc2hheWthbm5hbjk2N0BnbWFpbC5jb20iLCJpYXQiOjE2MjI4MTQzNjR9.rNEXhnoIKLzEgp6bTxkcDfbTv58WzJ0dR4Vd_q9-RBI",
     392
   )
   beforeAll(async () => {
