@@ -38,8 +38,12 @@ export default class Permissions {
         res.on("data", (d) => {
           let responseData = JSON.parse(d)
           let { data, meta } = responseData || {}
-          this.userFeatures = this.serializeRecords(data, meta)
-          resolve(this.userFeatures)
+          if (data && meta) {
+            this.userFeatures = this.serializeRecords(data, meta)
+            resolve(this.userFeatures)
+          } else {
+            reject(new Error("No records found"))
+          }
         })
       })
 
@@ -66,15 +70,43 @@ export default class Permissions {
     })
     return finalRecord
   }
-  isActive(userId, featureId) {
+  isActive(userId, featureId, resource) {
     try {
       let { userFeatures } = this
       let selectedUserFeature = userFeatures.find((record) => {
         return userId === record.userId && featureId === record.featureId
       })
 
-      let { status } = selectedUserFeature || {}
-      return status === "ACTIVE" ? true : false
+      let param = JSON.stringify({
+        userId: userId,
+        featureId: featureId,
+        resource,
+      })
+      this.createHeaders({ "Content-Length": param.length })
+      this.createRequestData({ path: "/api/v1/modules/isactive/userFeature" })
+
+      return new Promise((resolve, reject) => {
+        const req = http.request(this.defaultRequest, (res) => {
+          res.on("data", (d) => {
+            let responseData = JSON.parse(d)
+            let { data } = responseData || {}
+            if (data) {
+              let { status } = data || {}
+
+              resolve(status === "ACTIVE" ? true : false)
+            } else {
+              reject(new Error("No records found"))
+            }
+          })
+        })
+
+        req.on("error", (error) => {
+          reject(error)
+        })
+
+        req.write(param)
+        req.end()
+      })
     } catch (error) {
       return error
     }

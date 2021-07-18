@@ -1,18 +1,22 @@
 import Permissions from "../src/index"
 
 const test = async () => {
-  const perm = new Permissions(
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFrc2hheWthbm5hbjk2N0BnbWFpbC5jb20iLCJpYXQiOjE2MjI4MTQzNjR9.rNEXhnoIKLzEgp6bTxkcDfbTv58WzJ0dR4Vd_q9-RBI",
+  const permission = new Permissions(
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFrc2hheWthbm5hbjk2N0BnbWFpbC5jb20iLCJpYXQiOjE2MjY0MzkwNjV9.iuj9FxRQM3mnNkXCUBU0uF06G8EIn4NkftL1yuhqIzw",
     392
   )
 
   console.log("here1")
-  await perm.init()
+  await permission.init()
   console.log("here")
 
-  console.log(perm.isActive("michael_scott_123", "workflow_management_123"))
-  console.log(perm.isActive("P8uhx5FJ36HBebPm8aawzo", "asdu223uhc"))
-  // console.log(perm.getAllActiveLicenses())
+  let test = await permission.isActive(
+    "Sf1ipQ8yt8V1fHaH66Arq3",
+    "PVJzMpttyvfvtkfX8tFNPi",
+    { mrr: 100, revenue: 78878777 }
+  )
+  console.log(test)
+  console.log("here3")
 }
 
 test()
