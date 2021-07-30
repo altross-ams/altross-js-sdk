@@ -1,4 +1,5 @@
 import http from "http"
+import util from "./util"
 
 const ALTROSS_BASE_URL = "localhost"
 
@@ -70,7 +71,7 @@ export default class Permissions {
     })
     return finalRecord
   }
-  isActive(userId, featureId, resource) {
+  isActive(userId, featureId, resource, actor) {
     try {
       let { userFeatures } = this
       let selectedUserFeature = userFeatures.find((record) => {
@@ -81,9 +82,14 @@ export default class Permissions {
         userId: userId,
         featureId: featureId,
         resource,
+        actor,
       })
+
+      if (util.isEmpty(resource)) delete param["resource"]
+      if (util.isEmpty(actor)) delete param["actor"]
+
       this.createHeaders({ "Content-Length": param.length })
-      this.createRequestData({ path: "/api/v1/modules/isactive/userFeature" })
+      this.createRequestData({ path: "/api/v1/modules/hasPermission/users" })
 
       return new Promise((resolve, reject) => {
         const req = http.request(this.defaultRequest, (res) => {
