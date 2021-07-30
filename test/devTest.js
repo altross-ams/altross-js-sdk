@@ -11,9 +11,10 @@ const test = async () => {
   console.log("here")
 
   let test = await permission.isActive(
-    "4YU61E6WjKCi7uBYLiibzC",
+    "8U29j2XhdyyWWVHp3ktpZp",
     "1HZkLHz8L74z2LaQCGSskb",
-    { submittedBy: "akshay" }
+    { submittedBy: "akshay" },
+    { name: "ak" }
   )
   console.log(test)
   console.log("here3")
