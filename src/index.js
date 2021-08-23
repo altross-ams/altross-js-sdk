@@ -1,5 +1,6 @@
 import http from "http"
-import util from "./util"
+import { isEmpty, isNumeric, replaceChar, dlv } from "./util"
+import { OPERATOR_HASH } from "./constants"
 
 const ALTROSS_BASE_URL = "localhost"
 
@@ -10,7 +11,7 @@ export default class Permissions {
     this.defaultRequest = {
       host: ALTROSS_BASE_URL,
       port: 5000,
-      path: "/api/v1/modules/list/userFeature",
+      path: "/v1/getPermissions/users",
       method: "POST",
     }
     this.defaultHeaders = {
@@ -29,8 +30,8 @@ export default class Permissions {
 
     this.defaultHeaders = headers
   }
-  async init() {
-    let param = JSON.stringify({ filter: { status: "ACTIVE" } })
+  async init(userId) {
+    let param = JSON.stringify({ userId })
     this.createHeaders({ "Content-Length": param.length })
     this.createRequestData({})
 
@@ -38,10 +39,11 @@ export default class Permissions {
       const req = http.request(this.defaultRequest, (res) => {
         res.on("data", (d) => {
           let responseData = JSON.parse(d)
-          let { data, meta } = responseData || {}
-          if (data && meta) {
-            this.userFeatures = this.serializeRecords(data, meta)
-            resolve(this.userFeatures)
+          let { data } = responseData || {}
+          if (data) {
+            this.activePermissions = data.permissions
+            this.user = data.user
+            resolve(this.activePermissions)
           } else {
             reject(new Error("No records found"))
           }
@@ -56,40 +58,30 @@ export default class Permissions {
       req.end()
     })
   }
-  serializeRecords(listRecords, meta) {
-    let finalRecord = []
-    listRecords.forEach((record) => {
-      let lookupFieldValues = {}
-      Object.keys(meta).forEach((currMeta) => {
-        if (Object.keys(record).includes(currMeta)) {
-          lookupFieldValues[currMeta] = meta[currMeta].filter((metaValue) =>
-            record[currMeta].includes(metaValue.id)
-          )
-        }
-      })
-      finalRecord.push({ ...record, ...lookupFieldValues })
-    })
-    return finalRecord
+  hasPermission(permissionId, resource, targetResource, config) {
+    let { force } = config || {}
+    if (force) {
+      return this.checkPermissionForce(permissionId, resource, targetResource)
+    } else {
+      return this.checkPermission(permissionId, resource, targetResource)
+    }
   }
-  isActive(userId, featureId, resource, actor) {
+  checkPermissionForce(permissionId, resource, targetResource) {
     try {
-      let { userFeatures } = this
-      let selectedUserFeature = userFeatures.find((record) => {
-        return userId === record.userId && featureId === record.featureId
-      })
-
+      let { user } = this || {}
+      let { userId } = user || {}
       let param = JSON.stringify({
         userId: userId,
-        featureId: featureId,
+        permissionId: permissionId,
         resource,
-        actor,
+        targetResource,
       })
 
-      if (util.isEmpty(resource)) delete param["resource"]
-      if (util.isEmpty(actor)) delete param["actor"]
+      if (isEmpty(resource)) delete param["resource"]
+      if (isEmpty(targetResource)) delete param["targetResource"]
 
       this.createHeaders({ "Content-Length": param.length })
-      this.createRequestData({ path: "/api/v1/modules/hasPermission/users" })
+      this.createRequestData({ path: "/v1/hasPermission/users" })
 
       return new Promise((resolve, reject) => {
         const req = http.request(this.defaultRequest, (res) => {
@@ -117,23 +109,108 @@ export default class Permissions {
       return error
     }
   }
-  getAllActiveLicenses() {
+  checkPermission(permissionId, resource, targetResource) {
     try {
-      let { userFeatures } = this
-      let selectedUserFeature = userFeatures.map((record) => {
-        let { id, featureId, features } = record
-        return {
-          id,
-          featureId,
-          name: this.getFeatureNames(features),
-        }
+      let { user: userRecord, activePermissions } = this || {}
+      let currPermissionGroup = dlv(userRecord, "permissionGroup.0", null)
+      let permissionRecord = activePermissions.find((permission) => {
+        let { permissionId: currPermissionId } = permission || {}
+        return currPermissionId === permissionId
       })
-      return selectedUserFeature
+
+      let {
+        conditions,
+        conditionMatcher,
+        users: permissionUsers,
+      } = permissionRecord || {}
+      let status
+
+      if (this.userPermissionCheck(userRecord, permissionRecord)) {
+        status = true
+      } else {
+        status = false
+      }
+
+      if (
+        !isEmpty(conditions) &&
+        !isEmpty(conditionMatcher) &&
+        !isEmpty(resource)
+      ) {
+        let conditionsSatisfiedArray = conditions.map((condition) => {
+          let {
+            key,
+            value,
+            operator,
+            dataType,
+            permissionGroup,
+            valueKey,
+            valueType,
+          } = condition
+          let actualValue = resource[key]
+          if (
+            isEmpty(permissionGroup) ||
+            (!isEmpty(permissionGroup) &&
+              permissionGroup === currPermissionGroup)
+          ) {
+            if (
+              !isEmpty(OPERATOR_HASH[dataType]) &&
+              !isEmpty((OPERATOR_HASH[dataType] || {})[operator])
+            ) {
+              let selectedOperator = OPERATOR_HASH[dataType][operator]
+              if (
+                valueType === "DYNAMIC" &&
+                !isEmpty(targetResource) &&
+                !isEmpty(valueKey)
+              ) {
+                let val = targetResource[valueKey]
+                return selectedOperator.action(actualValue, val)
+              } else {
+                return selectedOperator.action(actualValue, value)
+              }
+            }
+          } else {
+            let { id: currUserId } = userRecord
+
+            if (permissionUsers.includes(currUserId)) return true
+            else return false
+          }
+        })
+
+        for (let i = 0; i < conditionMatcher.length; i++) {
+          let charAtIndex = conditionMatcher.charAt(i)
+          if (isNumeric(charAtIndex)) {
+            let actualVal =
+              conditionsSatisfiedArray[conditionMatcher.charAt(i) - 1]
+
+            if (!isEmpty(actualVal)) {
+              conditionMatcher = replaceChar(
+                conditionMatcher,
+                `${actualVal}`,
+                i
+              )
+            } else {
+              conditionMatcher = replaceChar(conditionMatcher, `${false}`, i)
+            }
+          }
+        }
+
+        conditionMatcher = conditionMatcher.replace(/and/g, "&&")
+        conditionMatcher = conditionMatcher.replace(/or/g, "||")
+
+        let finalStatus = eval(conditionMatcher)
+
+        status = finalStatus
+      }
+
+      return status
     } catch (error) {
       return error
     }
   }
-  getFeatureNames(features) {
-    return features.map((feature) => feature.name).find((feature) => feature)
+
+  userPermissionCheck(user, permission) {
+    let { permissions } = user || {}
+    let { id } = permission || {}
+    return (permissions || []).includes(id)
   }
 }

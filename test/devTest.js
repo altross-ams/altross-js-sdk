@@ -1,23 +1,22 @@
 import Permissions from "../src/index"
 
-const test = async () => {
+const checkPermission = async () => {
   const permission = new Permissions(
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFrc2hheWthbm5hbjk2NzdAZ21haWwuY29tIiwiaWF0IjoxNjI3NTY5NzkzfQ.2P3KKKkerfILaYRXgcwdSsq2-HgWsyEqna66nfypBKc",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6ImFrc2hheWthbm5hbjk2NzdAZ21haWwuY29tIiwiaWF0IjoxNjI5NzMwNTE5fQ.jBauOYNjsRCbJ4MKwt31vo2jbsyPWN-1QAUcZZPhZ10",
     392
   )
 
-  console.log("here1")
-  await permission.init()
-  console.log("here")
+  console.log("Initializing....")
+  await permission.init("LVCk8VQWyX1gHv1HqrYnBZ")
+  console.log("Initialized, checking status....")
 
-  let test = await permission.isActive(
-    "8U29j2XhdyyWWVHp3ktpZp",
-    "1HZkLHz8L74z2LaQCGSskb",
-    { submittedBy: "akshay" },
-    { name: "ak" }
+  let test = await permission.hasPermission(
+    "AB1QZGkukmjp3WNoyUGcLC",
+    { email: 15, submittedBy: "akshay" },
+    { name: "akshay" },
+    { force: true }
   )
-  console.log(test)
-  console.log("here3")
+  console.log("Given user permission status -", test)
 }
 
-test()
+checkPermission()
