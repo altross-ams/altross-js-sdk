@@ -1,13 +1,21 @@
 {
-  "name": "altross",
-  "version": "1.0.0",
+  "name": "altross-sdk",
+  "version": "0.0.1",
   "description": "This is a javascript sdk for permission management",
   "main": "build/index.js",
   "scripts": {
     "test": "jest",
     "dev": "nodemon --exec babel-node test/dev.test.js",
-    "build": "rollup --config"
+    "build": "rollup --config",
+    "release": "npm run build && np"
   },
+  "np": {
+    "tests": false
+  },
+  "files": [
+    "index.mjs",
+    "src/**/*.*"
+  ],
   "author": "Akshay K",
   "license": "SEE LICENSE",
   "devDependencies": {
@@ -20,6 +28,7 @@
     "babel-polyfill": "^6.26.0",
     "jest": "^27.0.3",
     "nodemon": "^2.0.7",
+    "np": "^7.5.0",
     "rollup": "^2.10.5",
     "rollup-plugin-babel": "^4.4.0",
     "rollup-plugin-terser": "^5.3.1"

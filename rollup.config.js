@@ -5,13 +5,13 @@ export default {
   input: "src/index.js",
   output: [
     {
-      file: "build/index.min.js",
+      file: "index.mjs",
       format: "es",
 
       plugins: [resolve(), terser(), babel()],
     },
     {
-      file: "build/index.js",
+      file: "index.js",
       format: "es",
 
       plugins: [resolve(), babel()],
