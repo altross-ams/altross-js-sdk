@@ -5,7 +5,7 @@
   "main": "build/index.js",
   "scripts": {
     "test": "jest",
-    "dev": "nodemon --exec babel-node test/devTest.js",
+    "dev": "nodemon --exec babel-node test/dev.test.js",
     "build": "rollup --config"
   },
   "author": "Akshay K",

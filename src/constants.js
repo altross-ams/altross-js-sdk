@@ -1,4 +1,4 @@
-import util from "./util"
+import { isEmpty } from "./utils/helpers"
 
 export const OPERATOR_HASH = {
   Number: {
@@ -32,11 +32,11 @@ export const OPERATOR_HASH = {
     },
     16: {
       name: "empty",
-      action: (recordValue) => util.isEmpty(recordValue),
+      action: (recordValue) => isEmpty(recordValue),
     },
     17: {
       name: "notempty",
-      action: (recordValue) => !util.isEmpty(recordValue),
+      action: (recordValue) => !isEmpty(recordValue),
     },
   },
   String: {
@@ -70,21 +70,21 @@ export const OPERATOR_HASH = {
     },
     26: {
       name: "empty",
-      action: (recordValue) => util.isEmpty(recordValue),
+      action: (recordValue) => isEmpty(recordValue),
     },
     27: {
       name: "notempty",
-      action: (recordValue) => !util.isEmpty(recordValue),
+      action: (recordValue) => !isEmpty(recordValue),
     },
   },
   Boolean: {
     30: {
       name: "empty",
-      action: (recordValue) => util.isEmpty(recordValue),
+      action: (recordValue) => isEmpty(recordValue),
     },
     31: {
       name: "notempty",
-      action: (recordValue) => !util.isEmpty(recordValue),
+      action: (recordValue) => !isEmpty(recordValue),
     },
     32: {
       name: "true",
@@ -98,11 +98,11 @@ export const OPERATOR_HASH = {
   Array: {
     40: {
       name: "empty",
-      action: (recordValue) => util.isEmpty(recordValue),
+      action: (recordValue) => isEmpty(recordValue),
     },
     41: {
       name: "notempty",
-      action: (recordValue) => !util.isEmpty(recordValue),
+      action: (recordValue) => !isEmpty(recordValue),
     },
     42: {
       name: "equal",
