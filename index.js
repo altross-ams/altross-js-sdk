@@ -1,70 +1,32 @@
-import https from 'https';
+import axios from 'axios';
 
-const ALTROSS_BASE_URL = "api.altross.com";
 class API {
   init({ authToken, orgId }) {
     this.authToken = authToken;
     this.orgId = orgId;
-    this.defaultRequest = {
-      host: ALTROSS_BASE_URL,
-      path: "",
-      method: "POST",
-    };
-    this.defaultHeaders = {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + this.authToken,
-      orgid: this.orgId,
-    };
-  }
-  _createRequestData(data) {
-    let requests = { ...this.defaultRequest, ...data };
+    axios.interceptors.request.use((config) => {
+      config.headers.Authorization = "Bearer " + this.authToken;
+      config.headers["orgid"] = this.orgId;
 
-    this.defaultRequest = { ...requests, headers: this.defaultHeaders };
-  }
-  _createHeaders(data) {
-    let headers = { ...this.defaultHeaders, ...data };
+      config.url = `https://api.altross.com/${config.url}`;
 
-    this.defaultHeaders = headers;
-  }
-  _makeRequest(param) {
-    return new Promise((resolve) => {
-      const req = https.request(this.defaultRequest, (res) => {
-        res.on("data", (d) => {
-          console.log(JSON.parse(d));
-          let responseData = JSON.parse(d);
-          resolve(responseData);
-        });
-      });
+      return config
+    });
 
-      req.on("error", (error) => {
-        resolve({ data: null, error });
-      });
-
-      req.write(param);
-      req.end();
-    })
-  }
-  post(path, params) {
-    let param = JSON.stringify(params);
-    this._createHeaders({ "Content-Length": param.length });
-    this._createRequestData({ path: path, method: "POST" });
-    return this._makeRequest(param)
-  }
-  put(path, params) {
-    let param = JSON.stringify(params);
-    this._createHeaders({ "Content-Length": param.length });
-    this._createRequestData({ path: path, method: "PUT" });
-
-    return this._makeRequest(param)
-  }
-  delete(path, params) {
-    let param = JSON.stringify(params);
-    this._createHeaders({ "Content-Length": param.length });
-    this._createRequestData({ path: path, method: "DELETE" });
-
-    return this._makeRequest(param)
+    axios.interceptors.response.use(
+      function (response) {
+        let { data } = response;
+        return data
+      },
+      function (error) {
+        console.log(error);
+        return Promise.reject(error)
+      }
+    );
+    this.request = axios;
   }
 }
+
 const api = new API();
 
 const dlv = (obj, key, def, p, undef) => {
@@ -231,7 +193,7 @@ const checkPermissionForce = async ({
     if (isEmpty(resource)) delete param["resource"];
     if (isEmpty(targetResource)) delete param["targetResource"];
 
-    let response = await api.post("/v1/hasPermission/users", param);
+    let response = await api.request.post("v1/hasPermission/users", param);
     let { data } = response || {};
     if (data) {
       let { status } = data || {};
@@ -241,7 +203,7 @@ const checkPermissionForce = async ({
       return false
     }
   } catch (error) {
-    return error
+    return { data: null, error }
   }
 };
 
@@ -350,18 +312,33 @@ const userPermissionCheck = (user, permission) => {
 };
 
 const createRecord = async ({ moduleName, data }) => {
-  let response = await api.post(`/v1/create/${moduleName}`, data);
-  return response
+  try {
+    let response = await api.request.post(`v1/create/${moduleName}`, data);
+    return response
+  } catch (error) {
+    return { data: null, error }
+  }
 };
 
 const updateRecord = async ({ moduleName, data, id }) => {
-  let response = await api.put(`/v1/update/${moduleName}`, { data, id });
-  return response
+  try {
+    let response = await api.request.put(`v1/update/${moduleName}`, {
+      data,
+      id,
+    });
+    return response
+  } catch (error) {
+    return { data: null, error }
+  }
 };
 
 const deleteRecord = async ({ moduleName, id }) => {
-  let response = await api.delete(`/v1/delete/${moduleName}`, { id });
-  return response
+  try {
+    let response = await api.request.delete(`v1/delete/${moduleName}`, { id });
+    return response
+  } catch (error) {
+    return { data: null, error }
+  }
 };
 
 class Permissions {
@@ -370,15 +347,20 @@ class Permissions {
     this.orgid = orgId;
     api.init({ authToken, orgId });
   }
-  async init(userId) {
-    let response = await api.post("/v1/getPermissions/users", { userId });
-    let { data } = response || {};
-    if (data) {
-      this.activePermissions = data.permissions;
-      this.user = data.user;
-      return this.activePermissions
-    } else {
-      return new Error("NO records found")
+  async setUserID(userId) {
+    try {
+      let { data, error } = await api.request.post("v1/getPermissions/users", {
+        userId,
+      });
+      if (error) {
+        throw error
+      } else {
+        this.activePermissions = data.permissions;
+        this.user = data.user;
+        return this.activePermissions
+      }
+    } catch (error) {
+      return { data: null, error }
     }
   }
   async hasPermission({ permissionId, resource, targetResource, config }) {

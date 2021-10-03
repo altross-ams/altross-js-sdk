@@ -20,7 +20,7 @@ export const checkPermissionForce = async ({
     if (isEmpty(resource)) delete param["resource"]
     if (isEmpty(targetResource)) delete param["targetResource"]
 
-    let response = await api.post("/v1/hasPermission/users", param)
+    let response = await api.request.post("v1/hasPermission/users", param)
     let { data } = response || {}
     if (data) {
       let { status } = data || {}
@@ -30,7 +30,7 @@ export const checkPermissionForce = async ({
       return false
     }
   } catch (error) {
-    return error
+    return { data: null, error }
   }
 }
 

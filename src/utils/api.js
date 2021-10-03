@@ -1,69 +1,31 @@
-import https from "https"
-
-const ALTROSS_BASE_URL = "api.altross.com"
+import axios from "axios"
 class API {
   init({ authToken, orgId }) {
     this.authToken = authToken
     this.orgId = orgId
-    this.defaultRequest = {
-      host: ALTROSS_BASE_URL,
-      path: "",
-      method: "POST",
-    }
-    this.defaultHeaders = {
-      "Content-Type": "application/json",
-      Authorization: "Bearer " + this.authToken,
-      orgid: this.orgId,
-    }
-  }
-  _createRequestData(data) {
-    let requests = { ...this.defaultRequest, ...data }
+    axios.interceptors.request.use((config) => {
+      config.headers.Authorization = "Bearer " + this.authToken
+      config.headers["orgid"] = this.orgId
 
-    this.defaultRequest = { ...requests, headers: this.defaultHeaders }
-  }
-  _createHeaders(data) {
-    let headers = { ...this.defaultHeaders, ...data }
+      config.url = `https://api.altross.com/${config.url}`
 
-    this.defaultHeaders = headers
-  }
-  _makeRequest(param) {
-    return new Promise((resolve) => {
-      const req = https.request(this.defaultRequest, (res) => {
-        res.on("data", (d) => {
-          console.log(JSON.parse(d))
-          let responseData = JSON.parse(d)
-          resolve(responseData)
-        })
-      })
-
-      req.on("error", (error) => {
-        resolve({ data: null, error })
-      })
-
-      req.write(param)
-      req.end()
+      return config
     })
-  }
-  post(path, params) {
-    let param = JSON.stringify(params)
-    this._createHeaders({ "Content-Length": param.length })
-    this._createRequestData({ path: path, method: "POST" })
-    return this._makeRequest(param)
-  }
-  put(path, params) {
-    let param = JSON.stringify(params)
-    this._createHeaders({ "Content-Length": param.length })
-    this._createRequestData({ path: path, method: "PUT" })
 
-    return this._makeRequest(param)
-  }
-  delete(path, params) {
-    let param = JSON.stringify(params)
-    this._createHeaders({ "Content-Length": param.length })
-    this._createRequestData({ path: path, method: "DELETE" })
-
-    return this._makeRequest(param)
+    axios.interceptors.response.use(
+      function (response) {
+        let { data } = response
+        return data
+      },
+      function (error) {
+        console.log(error)
+        return Promise.reject(error)
+      }
+    )
+    this.request = axios
   }
 }
+
 const api = new API()
+
 export default api

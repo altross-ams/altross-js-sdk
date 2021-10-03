@@ -1,3 +1,4 @@
+import axios from "axios"
 import api from "./utils/api"
 import { checkPermissionForce, checkPermission } from "./methods/hasPermission"
 import { createRecord, deleteRecord, updateRecord } from "./methods/crud"
@@ -8,15 +9,20 @@ export default class Permissions {
     this.orgid = orgId
     api.init({ authToken, orgId })
   }
-  async init(userId) {
-    let response = await api.post("/v1/getPermissions/users", { userId })
-    let { data } = response || {}
-    if (data) {
-      this.activePermissions = data.permissions
-      this.user = data.user
-      return this.activePermissions
-    } else {
-      return new Error("NO records found")
+  async setUserID(userId) {
+    try {
+      let { data, error } = await api.request.post("v1/getPermissions/users", {
+        userId,
+      })
+      if (error) {
+        throw error
+      } else {
+        this.activePermissions = data.permissions
+        this.user = data.user
+        return this.activePermissions
+      }
+    } catch (error) {
+      return { data: null, error }
     }
   }
   async hasPermission({ permissionId, resource, targetResource, config }) {

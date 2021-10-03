@@ -8,22 +8,20 @@ const checkPermission = async () => {
   })
 
   console.log("Initializing....")
-  await altross.init("LVCk8VQWyX1gHv1HqrYnBZ")
+  await altross.setUserID("LVCk8VQWyX1gHv1HqrYnBZ")
   console.log("Initialized, checking status....")
 
   // let test = await altross.hasPermission({
-  //   permissionId: "AB1QZGkukmjp3WNoyUGcLC",
-  //   resource: { email: 10, submittedBy: "Akshay" },
-  //   targetResource: { name: "Akshay" },
+  //   permissionId: "CnnXLv9QXHA2ehSUCrTK9W",
   //   config: { force: true },
   // })
-  // const record = await altross.create("permissions", {
-  //   data: {
-  //     name: "Test permissions",
-  //     permissionId: "test_id",
-  //     projects: [887],
-  //   },
-  // })
+  const record = await altross.create("permissions", {
+    data: {
+      name: "Test permissions",
+      permissionId: "test_id",
+      projects: [887],
+    },
+  })
   // console.log("created", record)
   // const test = await altross.update("permissions", {
   //   data: {
@@ -31,10 +29,10 @@ const checkPermission = async () => {
   //   },
   //   id: 5121,
   // })
-  await altross.delete("permissions", {
-    id: 7429,
-  })
-  console.log("deleted")
+  // await altross.delete("permissions", {
+  //   id: 7429,
+  // })
+  console.log(record)
 }
 
 checkPermission()

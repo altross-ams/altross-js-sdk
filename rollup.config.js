@@ -1,6 +1,8 @@
 import resolve from "@rollup/plugin-node-resolve"
 import babel from "rollup-plugin-babel"
 import { terser } from "rollup-plugin-terser"
+import nodePolyfills from "rollup-plugin-polyfill-node"
+
 export default {
   input: "src/index.js",
   output: [
@@ -8,7 +10,7 @@ export default {
       file: "index.mjs",
       format: "es",
 
-      plugins: [resolve(), terser(), babel()],
+      plugins: [resolve(), terser(), babel(), nodePolyfills()],
     },
     {
       file: "index.js",
@@ -17,5 +19,5 @@ export default {
       plugins: [resolve(), babel()],
     },
   ],
-  external: ["http"],
+  external: ["axios"],
 }

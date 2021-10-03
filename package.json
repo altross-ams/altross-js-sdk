@@ -17,6 +17,9 @@
     "index.mjs",
     "src/**/*.*"
   ],
+  "peerDependencies": {
+    "axios": "^0.21.1"
+  },
   "author": "Akshay K",
   "license": "SEE LICENSE",
   "devDependencies": {
@@ -32,7 +35,10 @@
     "np": "^7.5.0",
     "rollup": "^2.10.5",
     "rollup-plugin-babel": "^4.4.0",
+    "rollup-plugin-polyfill-node": "^0.7.0",
     "rollup-plugin-terser": "^5.3.1"
   },
-  "dependencies": {}
+  "dependencies": {
+    "axios": "^0.22.0"
+  }
 }
