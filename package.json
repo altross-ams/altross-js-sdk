@@ -2,7 +2,8 @@
   "name": "altross-sdk",
   "version": "0.1.0",
   "description": "This is a javascript sdk for permission management",
-  "main": "build/index.js",
+  "main": "index.mjs",
+  "module": "index.mjs",
   "scripts": {
     "test": "jest",
     "dev": "nodemon --exec babel-node test/dev.test.js",
